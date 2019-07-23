@@ -68,7 +68,6 @@ install_requires = [
         "numpy",
         "scipy",
         "coveralls",
-        "structsolve",
         "composites",
         ]
 

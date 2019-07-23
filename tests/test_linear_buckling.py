@@ -16,17 +16,24 @@ from bfsplate2d.quadrature import get_points_weights
 DOF = 6
 def test_linear_buckling(plot_static=False, plot_lb=False):
     # number of nodes
-    nx = 23
-    ny = 23
+    nx = 13 # along x
+    ny = 9 # along y
 
     # geometry
-    a = 1.0
-    b = 0.5
+    a = 7 # along x
+    b = 3 # along y
 
     # material properties
-    E = 0.7e11
-    nu = 0.3
-    lam = read_stack(stack=[0], plyt=0.001, laminaprop=[E, E, nu])
+    E11 = 142.5e9
+    E22 = 8.7e9
+    nu12 = 0.28
+    G12 = 5.1e9
+    G13 = 5.1e9
+    G23 = 5.1e9
+    laminaprop = (E11, E22, nu12, G12, G13, G23)
+    stack = [0, 45, -45, 90, 90, -45, 45, 0]
+    ply_thickness = 0.001
+    lam = read_stack(stack=stack, plyt=ply_thickness, laminaprop=laminaprop)
 
     # creating mesh
     x = np.linspace(0, a, nx)
@@ -38,8 +45,21 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
     nids = 1 + np.arange(ncoords.shape[0])
     nid_pos = dict(zip(nids, np.arange(len(nids))))
 
-    nids_mesh = nids.reshape(nx, ny)
+    # identifying nodal connectivity for plate elements
+    # similar than Nastran's CQUAD4
+    #
+    #   ^ y
+    #   |
+    #
+    #  4 ________ 3
+    #   |       |
+    #   |       |   --> x
+    #   |       |
+    #   |_______|
+    #  1         2
 
+
+    nids_mesh = nids.reshape(nx, ny)
     n1s = nids_mesh[:-1, :-1].flatten()
     n2s = nids_mesh[1:, :-1].flatten()
     n3s = nids_mesh[1:, 1:].flatten()
@@ -125,10 +145,8 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
     # Original: (K + lambda*KG)*v = 0
     # Modified: (-1/lambda)*K*v = KG*v  #NOTE here we find (-1/lambda)
     num_eigenvalues = 5
-    print('eig solver begin')
     eigvals, eigvecsu = eigsh(A=Kguu, k=num_eigenvalues, which='SM', M=Kuu,
             tol=1e-6, sigma=1., mode='cayley')
-    print('eig solver end')
     eigvals = -1./eigvals
     eigvecs = np.zeros((K.shape[0], num_eigenvalues), dtype=float)
     eigvecs[bu, :] = eigvecsu
@@ -141,7 +159,10 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
         plt.contourf(xmesh, ymesh, wplot, levels=levels)
         plt.colorbar()
         plt.show()
-    print(eigvals)
+
+    print('eigvals', eigvals)
+    assert np.allclose(eigvals,[9513.17239643, 11731.4928982, 12914.44595181,
+        18580.05590354, 26122.01021769], rtol=1e-5)
 
 
 if __name__ == '__main__':

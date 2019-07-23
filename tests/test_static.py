@@ -2,6 +2,8 @@ import sys
 sys.path.append(r'C:\repositories\bfsplate2d')
 
 import numpy as np
+from scipy.sparse import csc_matrix
+from scipy.sparse.linalg import spsolve
 from composites.laminate import read_stack
 
 from bfsplate2d import BFSPlate2D, update_K
@@ -71,7 +73,8 @@ def test_static(plot=False):
     fu = f[bu]
 
     # solving
-    uu = np.linalg.solve(Kuu, fu)
+    Kuu = csc_matrix(Kuu) # making Kuu a sparse matrix
+    uu = spsolve(Kuu, fu)
     u = np.zeros(K.shape[0], dtype=float)
     u[bu] = uu
 
@@ -103,6 +106,8 @@ def test_static(plot=False):
         plt.contourf(x, y, w, levels=levels)
         plt.colorbar()
         plt.show()
+
+    assert np.isclose(w.max(), 0.14919931491702546, rtol=1e-5)
 
 if __name__ == '__main__':
     test_static(plot=True)

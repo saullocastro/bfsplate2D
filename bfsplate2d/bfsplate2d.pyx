@@ -14,6 +14,21 @@ DOUBLE = np.float64
 cdef int DOF = 6
 
 cdef class BFSPlate2D(object):
+    """
+    Nodal connectivity for plate element
+    similar to Nastran's CQUAD4
+
+      ^ y
+      |
+
+     4 ________ 3
+      |       |
+      |       |   --> x
+      |       |
+      |_______|
+     1         2
+
+    """
     cdef public cINT n1, n2, n3, n4
     cdef public double lex, ley, rho
     cdef public cDOUBLE[:, :] ABD
