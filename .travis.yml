@@ -26,6 +26,7 @@ before_install:
   - conda info -a
   - conda create -n testenv python=$TRAVIS_PYTHON_VERSION $CONDA_DEPS
   - source activate testenv
+  - python setup.py build_ext --inplace
 
 install:
   - python setup.py install
