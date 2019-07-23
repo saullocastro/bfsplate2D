@@ -16,8 +16,8 @@ from bfsplate2d.quadrature import get_points_weights
 DOF = 6
 def test_linear_buckling(plot_static=False, plot_lb=False):
     # number of nodes
-    nx = 13 # along x
-    ny = 9 # along y
+    nx = 7 # along x
+    ny = 5 # along y
 
     # geometry
     a = 7 # along x
@@ -161,8 +161,7 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
         plt.show()
 
     print('eigvals', eigvals)
-    assert np.allclose(eigvals,[9513.17239643, 11731.4928982, 12914.44595181,
-        18580.05590354, 26122.01021769], rtol=1e-5)
+    assert np.allclose(eigvals,[ 9469.11822737, 11706.06566922, 12835.65352185, 18537.3497283, 26327.59284375], rtol=1e-5)
 
 
 if __name__ == '__main__':

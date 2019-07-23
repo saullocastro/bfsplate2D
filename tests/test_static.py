@@ -11,8 +11,8 @@ from bfsplate2d import BFSPlate2D, update_K
 DOF = 6
 def test_static(plot=False):
     # number of nodes
-    nx = 13
-    ny = 11
+    nx = 7
+    ny = 5
 
     # geometry
     a = 0.5
@@ -107,7 +107,7 @@ def test_static(plot=False):
         plt.colorbar()
         plt.show()
 
-    assert np.isclose(w.max(), 0.14919931491702546, rtol=1e-5)
+    assert np.isclose(w.max(), 0.0717, rtol=1e-3)
 
 if __name__ == '__main__':
     test_static(plot=True)
