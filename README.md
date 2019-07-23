@@ -1,6 +1,15 @@
 Implementation of the BFS plate finite element in 2D, aiming linear and
 nonlinear analyses.
 
+Travis-CI status:
+
+[![Build Status](https://travis-ci.com/saullocastro/bfsplate2d.svg?branch=master)](https://travis-ci.com/saullocastro/bfsplate2d)
+
+Coverage status:
+
+[![Coverage Status](https://coveralls.io/repos/github/saullocastro/bfsplate2d/badge.svg?branch=master)](https://coveralls.io/github/saullocastro/bfsplate2d?branch=master)
+
+
 License
 -------
 Distrubuted in the 2-Clause BSD license (https://raw.github.com/saullocastro/bfsplate2d/master/LICENSE).
