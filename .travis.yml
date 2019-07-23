@@ -31,8 +31,7 @@ install:
   - python setup.py install
 
 script:
-  - coverage run -m py.test
-  - coverage report
+  - py.test bfsplate2d tests --cov
 
 after_success:
   - coveralls
