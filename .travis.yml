@@ -11,9 +11,7 @@ python:
 env:
     global:
         # List package dependencies for conda
-        - CONDA_DEPS="pytest coveralls pytest-cov numpy"
-        # Package name for test invocation
-        - PACKAGENAME="bfsplate2d'
+        - CONDA_DEPS="pytest coveralls pytest-cov numpy scipy"
 
 before_install:
     - sudo apt-get update
