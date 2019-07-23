@@ -1,1 +1,2 @@
-py.test tests bfsplate2d --cov
+coverage run --source bfsplate2d -m py.test tests
+coverage report
