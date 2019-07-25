@@ -19,3 +19,5 @@ temp*.*
 *.pyo
 *.pyd
 
+bfsplate2d.c 
+bfsplate2d.html 
