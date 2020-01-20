@@ -2,9 +2,6 @@ import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import eigsh, spsolve
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
 from composites.laminate import read_stack
 
 from bfsplate2d import BFSPlate2D, update_K, update_Kg, DOF
@@ -121,6 +118,9 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
 
     print('u extremes', u.min(), u.max())
     if plot_static:
+        import matplotlib
+        matplotlib.use('TkAgg')
+        import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
         uplot = u[0::DOF].reshape(nx, ny).T
         levels = np.linspace(uplot.min(), uplot.max(), 300)
@@ -148,6 +148,9 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
     eigvecs[bu, :] = eigvecsu
 
     if plot_lb:
+        import matplotlib
+        matplotlib.use('TkAgg')
+        import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
         mode = 0
         wplot = eigvecs[2::DOF, mode].reshape(nx, ny).T
