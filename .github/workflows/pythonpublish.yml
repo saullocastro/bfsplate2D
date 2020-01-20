@@ -7,9 +7,9 @@ on:
 jobs:     
   deploy:
     strategy:
-        matrix:
-          runs-on: [windows-latest]
-          python-version: [3.5, 3.6, 3.7, 3.8]
+      matrix:
+        runs-on: [windows-latest]
+        python-version: [3.6, 3.7, 3.8]
     runs-on:  ${{ matrix.runs-on }}
     steps:
     - uses: actions/checkout@v1
@@ -28,4 +28,7 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
         python setup.py sdist bdist_wheel
-        twine upload dist/*
+        twine upload dist/*.whl
+        if: ${{ matrix.python-version }} == 3.6
+         twine upload dist/*.tar.gz
+          
