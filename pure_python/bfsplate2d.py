@@ -79,6 +79,7 @@ class BFSPlate2D(object):
         ley = self.ley
         return np.array([[0, 0, 2*((-eta - 2)*(0.125*eta - 0.125)*(-xi - 2)*(xi - 1)**2 - 0.0625*(eta - 1)**2*(-xi - 2)*(xi - 1)**2)/ley, 2*(0.03125*lex*(-eta - 2)*(2*eta - 2)*(-xi - 1)*(xi - 1)**2 - 0.03125*lex*(eta - 1)**2*(-xi - 1)*(xi - 1)**2)/ley, 2*(0.03125*ley*(-eta - 1)*(2*eta - 2)*(-xi - 2)*(xi - 1)**2 - 0.03125*ley*(eta - 1)**2*(-xi - 2)*(xi - 1)**2)/ley, 2*(0.015625*lex*ley*(-eta - 1)*(2*eta - 2)*(-xi - 1)*(xi - 1)**2 - 0.015625*lex*ley*(eta - 1)**2*(-xi - 1)*(xi - 1)**2)/ley, 0, 0, 2*(0.0625*(-eta - 2)*(2*eta - 2)*(xi - 2)*(xi + 1)**2 - 0.0625*(eta - 1)**2*(xi - 2)*(xi + 1)**2)/ley, 2*(-0.03125*lex*(-eta - 2)*(2*eta - 2)*(xi - 1)*(xi + 1)**2 + 0.03125*lex*(eta - 1)**2*(xi - 1)*(xi + 1)**2)/ley, 2*(0.03125*ley*(-eta - 1)*(2*eta - 2)*(xi - 2)*(xi + 1)**2 - 0.03125*ley*(eta - 1)**2*(xi - 2)*(xi + 1)**2)/ley, 2*(-0.015625*lex*ley*(-eta - 1)*(2*eta - 2)*(xi - 1)*(xi + 1)**2 + 0.015625*lex*ley*(eta - 1)**2*(xi - 1)*(xi + 1)**2)/ley, 0, 0, 2*((0.125*eta + 0.125)*(eta - 2)*(xi - 2)*(xi + 1)**2 + 0.0625*(eta + 1)**2*(xi - 2)*(xi + 1)**2)/ley, 2*(-0.03125*lex*(eta - 2)*(2*eta + 2)*(xi - 1)*(xi + 1)**2 - 0.03125*lex*(eta + 1)**2*(xi - 1)*(xi + 1)**2)/ley, 2*(-0.03125*ley*(eta - 1)*(2*eta + 2)*(xi - 2)*(xi + 1)**2 - 0.03125*ley*(eta + 1)**2*(xi - 2)*(xi + 1)**2)/ley, 2*(0.015625*lex*ley*(eta - 1)*(2*eta + 2)*(xi - 1)*(xi + 1)**2 + 0.015625*lex*ley*(eta + 1)**2*(xi - 1)*(xi + 1)**2)/ley, 0, 0, 2*((0.125*eta + 0.125)*(eta - 2)*(-xi - 2)*(xi - 1)**2 + 0.0625*(eta + 1)**2*(-xi - 2)*(xi - 1)**2)/ley, 2*(0.03125*lex*(eta - 2)*(2*eta + 2)*(-xi - 1)*(xi - 1)**2 + 0.03125*lex*(eta + 1)**2*(-xi - 1)*(xi - 1)**2)/ley, 2*(-0.03125*ley*(eta - 1)*(2*eta + 2)*(-xi - 2)*(xi - 1)**2 - 0.03125*ley*(eta + 1)**2*(-xi - 2)*(xi - 1)**2)/ley, 2*(-0.015625*lex*ley*(eta - 1)*(2*eta + 2)*(-xi - 1)*(xi - 1)**2 - 0.015625*lex*ley*(eta + 1)**2*(-xi - 1)*(xi - 1)**2)/ley]])
 
+
 def update_K(plate, nid_pos, ncoords, K):
     """Update a global stiffness matrix K
 
@@ -1022,7 +1023,6 @@ def update_Kg(u, plate, nid_pos, points, weights, Kg):
             Kg[5+c4, 5+c4] += weight*( lex*ley*(eta + 1)**2*(xi - 1)**2*(lex*(3*eta - 1)*(xi - 1)*(xi + 1)*(Nxy*ley*(eta - 1)*(eta + 1)*(3*xi + 1) + Nyy*lex*(3*eta - 1)*(xi - 1)*(xi + 1)) + ley*(eta - 1)*(eta + 1)*(3*xi + 1)*(Nxx*ley*(eta - 1)*(eta + 1)*(3*xi + 1) + Nxy*lex*(3*eta - 1)*(xi - 1)*(xi + 1)))/4096 )
 
 
-
 def update_M(plate, nid_pos, M):
     """Update a global mass matrix M
 
@@ -1032,10 +1032,6 @@ def update_M(plate, nid_pos, M):
         The plate element being added to Kg
     nid_pos : dict
         Correspondence between node ids and their position in the global assembly
-    points : np.array
-        Integration poins
-    weights : np.array
-        Integration weights
     M : np.array
         Global mass matrix updated in-place
 

@@ -10,8 +10,8 @@ import numpy as np
 from Cython.Build import cythonize
 
 
-is_released = True
-version = '0.1.0'
+is_released = False
+version = '0.2.0'
 
 
 def git_version():
@@ -81,10 +81,10 @@ Intended Audience :: Developers
 Topic :: Scientific/Engineering :: Mathematics
 Topic :: Education
 License :: OSI Approved :: BSD License
-Operating System :: Microsoft :: Windows
 Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
+Operating System :: Microsoft :: Windows
 Operating System :: Unix
 
 """

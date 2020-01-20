@@ -7,10 +7,9 @@ from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve
 from composites.laminate import read_stack
 
-from bfsplate2d import BFSPlate2D, update_K
+from bfsplate2d import BFSPlate2D, update_K, DOF
 from bfsplate2d.quadrature import get_points_weights
 
-DOF = 6
 def test_static_pressure(plot=False):
     # number of nodes
     nx = 5

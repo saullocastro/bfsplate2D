@@ -10,10 +10,9 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from composites.laminate import read_stack
 
-from bfsplate2d import BFSPlate2D, update_K, update_Kg
+from bfsplate2d import BFSPlate2D, update_K, update_Kg, DOF
 from bfsplate2d.quadrature import get_points_weights
 
-DOF = 6
 def test_linear_buckling(plot_static=False, plot_lb=False):
     # number of nodes
     nx = 7 # along x
