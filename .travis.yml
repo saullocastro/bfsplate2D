@@ -30,6 +30,7 @@ before_install:
   - source activate testenv
 
 install:
+  - pip install composites 
   - python setup.py build_ext --inplace --force --define CYTHON_TRACE
 
 script:
