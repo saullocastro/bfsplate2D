@@ -13,7 +13,7 @@ def integrate_simplify(integrand):
     return sympy.simplify(sympy.integrate(integrand, ('xi', -1, 1), ('eta', -1, 1)))
 
 def main():
-    sympy.var('xi, eta, lex, ley, rho')
+    sympy.var('xi, eta, lex, ley, rho, h')
     sympy.var('A11, A12, A16, A22, A26, A66')
     sympy.var('B11, B12, B16, B22, B26, B66')
     sympy.var('D11, D12, D16, D22, D26, D66')
@@ -31,6 +31,11 @@ def main():
     Hwyi = lambda xii, etai: -ley/32.*(xi + xii)**2*(xi*xii - 2)*etai*(eta + etai)**2*(eta*etai - 1)
     Hwxyi = lambda xii, etai: lex*ley/64.*xii*(xi + xii)**2*(xi*xii - 1)*etai*(eta + etai)**2*(eta*etai - 1)
 
+    # node 1 (-1, -1)
+    # node 2 (+1, -1)
+    # node 3 (+1, +1)
+    # node 4 (-1, +1)
+
     Nu = sympy.Matrix([[
         Li(-1, -1), 0, 0, 0, 0, 0,
         Li(+1, -1), 0, 0, 0, 0, 0,
@@ -45,10 +50,10 @@ def main():
         ]])
     Nw = sympy.Matrix([[
        #u, v, w,     , dw/dx  , dw/dy,  d2w/(dxdy)
-        0, 0, Hwi(-1, -1), Hwxi(-1, -1), Hwyi(-1, -1), Hwxyi(-1, -1),# node 1 (-1, -1)
-        0, 0, Hwi(+1, -1), Hwxi(+1, -1), Hwyi(+1, -1), Hwxyi(+1, -1),# node 2 (+1, -1)
-        0, 0, Hwi(+1, +1), Hwxi(+1, +1), Hwyi(+1, +1), Hwxyi(+1, +1),# node 3 (+1, +1)
-        0, 0, Hwi(-1, +1), Hwxi(-1, +1), Hwyi(-1, +1), Hwxyi(-1, +1),# node 4 (-1, +1)
+        0, 0, Hwi(-1, -1), Hwxi(-1, -1), Hwyi(-1, -1), Hwxyi(-1, -1),
+        0, 0, Hwi(+1, -1), Hwxi(+1, -1), Hwyi(+1, -1), Hwxyi(+1, -1),
+        0, 0, Hwi(+1, +1), Hwxi(+1, +1), Hwyi(+1, +1), Hwxyi(+1, +1),
+        0, 0, Hwi(-1, +1), Hwxi(-1, +1), Hwyi(-1, +1), Hwxyi(-1, +1),
         ]])
     A = sympy.Matrix([
         [A11, A12, A16],
@@ -87,26 +92,27 @@ def main():
         Nphix_y + Nphiy_x
         ])
 
-    # Constitutive linear stiffness matrix
-    Ke = sympy.zeros(4*DOF, 4*DOF)
-    Ke[:, :] = (lex*ley)/4.*(Bm.T*A*Bm + Bm.T*B*Bb + Bb.T*B*Bm + Bb.T*D*Bb)
-    #TODO nonlinear terms
+    # mass matrix
+    #TODO note that OFFSET is not supported
+    Me = sympy.zeros(4*DOF, 4*DOF)
+    Me[:, :] = (lex*ley)/4.*rho*(h*(Nu.T*Nu + Nv.T*Nv + Nw.T*Nw)
+                          + h**3/12*(Nphix.T*Nphix + Nphiy.T*Nphiy))
 
     # integrating matrices in natural coordinates
     #TODO integrate only upper or lower triangle
 
-    print('Integrating Ke')
+    print('Integrating Me')
     integrands = []
-    for ind, integrand in np.ndenumerate(Ke):
+    for ind, integrand in np.ndenumerate(Me):
         integrands.append(integrand)
     p = Pool(cpu_count)
     a = list(p.map(integrate_simplify, integrands))
-    for i, (ind, integrand) in enumerate(np.ndenumerate(Ke)):
-        Ke[ind] = a[i]
+    for i, (ind, integrand) in enumerate(np.ndenumerate(Me)):
+        Me[ind] = a[i]
 
-    # K represents the global stiffness matrix
+    # M represents the global mass matrix
     # in case we want to apply coordinate transformations
-    K = Ke
+    M = Me
 
     def name_ind(i):
         if i >=0 and i < DOF:
@@ -121,11 +127,13 @@ def main():
             raise
 
     print('printing for code')
-    for ind, val in np.ndenumerate(K):
+    for ind, val in np.ndenumerate(M):
+        if val == 0:
+            continue
         i, j = ind
         si = name_ind(i)
         sj = name_ind(j)
-        print('        K[%d+%s, %d+%s]' % (i%DOF, si, j%DOF, sj), '+=', K[ind])
+        print('        M[%d+%s, %d+%s]' % (i%DOF, si, j%DOF, sj), '+=', M[ind])
 
     #TODO mass matrix
 
