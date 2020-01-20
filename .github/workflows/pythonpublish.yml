@@ -22,13 +22,21 @@ jobs:
         python -m pip install --upgrade pip
         pip install setuptools wheel twine
         pip install -r requirements.txt
-    - name: Build and publish
+    - name: Build
+      run: |
+        python setup.py sdist bdist_wheel
+    - name: Publish source and wheel
+      if: ${{ matrix.python-version }} == 3.6
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        python setup.py sdist bdist_wheel
+        twine upload dist/*
+    - name: Publish only wheel
+      if: ${{ matrix.python-version }} != 3.6
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
         twine upload dist/*.whl
-        if: ${{ matrix.python-version }} == 3.6
-         twine upload dist/*.tar.gz
           
