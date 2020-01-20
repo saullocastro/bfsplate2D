@@ -11,7 +11,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.2.0'
+version = '0.2.4'
 
 
 def git_version():
@@ -83,6 +83,7 @@ License :: OSI Approved :: BSD License
 Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
+Programming Language :: Python :: 3.8
 Operating System :: Microsoft :: Windows
 Operating System :: Unix
 
