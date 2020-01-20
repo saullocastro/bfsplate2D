@@ -7,6 +7,7 @@ Travis-CI status:
 
 
 Github Actions status:
+
 [![Actions Status](https://github.com/saullocastro/bfsplate2d/workflows/pytest/badge.svg)](https://github.com/saullocastro/bfsplate2d/actions)
 
 Coverage status:
