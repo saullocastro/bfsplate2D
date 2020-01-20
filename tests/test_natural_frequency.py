@@ -1,8 +1,5 @@
 from scipy.linalg import eigh
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
 from composites.laminate import read_stack
 
 from bfsplate2d import BFSPlate2D, update_K, update_M, DOF
@@ -102,6 +99,9 @@ def test_nat_freq(plot_mode=None):
     assert np.isclose(omegan[0], wmn, rtol=0.01)
 
     if plot_mode is not None:
+        import matplotlib
+        matplotlib.use('TkAgg')
+        import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
         wplot = eigvecs[2::DOF, plot_mode].reshape(nx, ny).T
         levels = np.linspace(wplot.min(), wplot.max(), 300)

@@ -5,9 +5,6 @@ import numpy as np
 from numpy import isclose
 from scipy.linalg import eigh, solve
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
 from composites.laminate import read_stack
 
 from bfsplate2d import BFSPlate2D, update_K, update_Kg
@@ -141,6 +138,9 @@ def test_linear_buckling_iso_SSSS(plot_static=False, plot_lb=False, nx=9, ny=5):
     u[bu] = uu
 
     if plot_static:
+        import matplotlib
+        matplotlib.use('TkAgg')
+        import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
         uplot = u[0::DOF].reshape(nx, ny).T
         vplot = u[1::DOF].reshape(nx, ny).T
@@ -167,6 +167,9 @@ def test_linear_buckling_iso_SSSS(plot_static=False, plot_lb=False, nx=9, ny=5):
     eigvecs[bu, :][:, bu] = eigvecsu
 
     if plot_lb:
+        import matplotlib
+        matplotlib.use('TkAgg')
+        import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
         mode = 0
         wplot = eigvecs[2::DOF, mode].reshape(nx, ny).T

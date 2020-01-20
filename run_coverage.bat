@@ -1,2 +1,1 @@
-coverage run --source bfsplate2d -m py.test tests
-coverage report
+pytest .\tests --cov=bfsplate2d --cov-report html

@@ -1,6 +1,3 @@
-import sys
-sys.path.append(r'C:\repositories\bfsplate2d')
-
 import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import eigsh, spsolve

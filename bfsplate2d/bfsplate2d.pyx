@@ -2,7 +2,6 @@
 #cython: wraparound=False
 #cython: cdivision=True
 #cython: nonecheck=False
-#cython: profile=True
 #cython: infer_types=False
 import numpy as np
 cimport numpy as np
@@ -36,7 +35,7 @@ cdef class BFSPlate2D(object):
     cdef public cDOUBLE[:, :] Bb
     cdef public cDOUBLE[:] e
     cdef public cDOUBLE[:] u
-    def __init__(self):
+    def __init__(BFSPlate2D self):
         self.n1 = -1
         self.n2 = -1
         self.n3 = -1
@@ -52,7 +51,7 @@ cdef class BFSPlate2D(object):
         self.u = np.zeros(4*DOF, dtype=DOUBLE)
 
 
-    cdef void calc_Bm(self, double xi, double eta) nogil:
+    cdef void calc_Bm(BFSPlate2D self, double xi, double eta) nogil:
         cdef double lex, ley
         lex = self.lex
         ley = self.ley
@@ -74,7 +73,7 @@ cdef class BFSPlate2D(object):
         self.Bm[2, 19] = 2*(-0.25*eta - 0.25)/lex
 
 
-    cdef void calc_Bb(self, double xi, double eta) nogil:
+    cdef void calc_Bb(BFSPlate2D self, double xi, double eta) nogil:
         cdef double lex, ley
         lex = self.lex
         ley = self.ley
@@ -127,19 +126,19 @@ cdef class BFSPlate2D(object):
         self.Bb[2, 22] = -8*(-0.03125*ley*(eta - 1)*(2*eta + 2)*(-xi - 2)*(2*xi - 2) + 0.03125*ley*(eta - 1)*(2*eta + 2)*(xi - 1)**2 - 0.03125*ley*(eta + 1)**2*(-xi - 2)*(2*xi - 2) + 0.03125*ley*(eta + 1)**2*(xi - 1)**2)/(lex*ley)
         self.Bb[2, 23] = -8*(-0.015625*lex*ley*(eta - 1)*(2*eta + 2)*(-xi - 1)*(2*xi - 2) + 0.015625*lex*ley*(eta - 1)*(2*eta + 2)*(xi - 1)**2 - 0.015625*lex*ley*(eta + 1)**2*(-xi - 1)*(2*xi - 2) + 0.015625*lex*ley*(eta + 1)**2*(xi - 1)**2)/(lex*ley)
 
-    cpdef np.ndarray[cDOUBLE, ndim=2] Nu(self, double xi, double eta):
+    cpdef np.ndarray[cDOUBLE, ndim=2] Nu(BFSPlate2D self, double xi, double eta):
         cdef double lex, ley
         lex = self.lex
         ley = self.ley
         return np.array([(0.25 - 0.25*xi)*(1 - eta), 0, 0, 0, 0, 0, (1 - eta)*(0.25*xi + 0.25), 0, 0, 0, 0, 0, (eta + 1)*(0.25*xi + 0.25), 0, 0, 0, 0, 0, (0.25 - 0.25*xi)*(eta + 1), 0, 0, 0, 0, 0])
 
-    cpdef np.ndarray[cDOUBLE, ndim=2] Nv(self, double xi, double eta):
+    cpdef np.ndarray[cDOUBLE, ndim=2] Nv(BFSPlate2D self, double xi, double eta):
         cdef double lex, ley
         lex = self.lex
         ley = self.ley
         return np.array([0, (0.25 - 0.25*xi)*(1 - eta), 0, 0, 0, 0, 0, (1 - eta)*(0.25*xi + 0.25), 0, 0, 0, 0, 0, (eta + 1)*(0.25*xi + 0.25), 0, 0, 0, 0, 0, (0.25 - 0.25*xi)*(eta + 1), 0, 0, 0, 0])
 
-    cpdef np.ndarray[cDOUBLE, ndim=2] Nw(self, double xi, double eta):
+    cpdef np.ndarray[cDOUBLE, ndim=2] Nw(BFSPlate2D self, double xi, double eta):
         cdef double lex, ley
         lex = self.lex
         ley = self.ley
@@ -1121,7 +1120,7 @@ cpdef void update_M(BFSPlate2D plate, nid_pos, np.ndarray[cDOUBLE, ndim=2] M):
         Global mass matrix updated in-place
     """
     cdef cINT pos1, pos2, pos3, pos4, c1, c2, c3, c4
-    cdef double lex, ley, h
+    cdef double lex, ley, h, rho
     cdef double A11, A12, A16, A22, A26, A66
     cdef double B11, B12, B16, B22, B26, B66
     cdef double D11, D12, D16, D22, D26, D66
