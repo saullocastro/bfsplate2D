@@ -67,7 +67,6 @@ def read(fname):
 install_requires = [
         "numpy",
         "scipy",
-        "coveralls",
         "composites",
         ]
 
