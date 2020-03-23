@@ -108,6 +108,7 @@ extensions = [
         include_dirs=include_dirs, extra_compile_args=compile_args, extra_link_args=link_args, language='c++'),
 
     ]
+
 ext_modules = cythonize(extensions, compiler_directives={'linetrace': True})
 
 data_files = [('', [

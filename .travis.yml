@@ -4,6 +4,8 @@ dist: xenial
 
 cache: false
 
+sudo: false
+
 python:
   - "3.6"
   - "3.7"
