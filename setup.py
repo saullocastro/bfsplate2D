@@ -105,11 +105,17 @@ extensions = [
         sources=[
             './bfsplate2d/bfsplate2d.pyx',
             ],
-        include_dirs=include_dirs, extra_compile_args=compile_args, extra_link_args=link_args, language='c++'),
+        include_dirs=include_dirs,
+        extra_compile_args=compile_args,
+        extra_link_args=link_args,
+        language='c++'),
 
     ]
 
-ext_modules = cythonize(extensions, compiler_directives={'linetrace': True})
+ext_modules = cythonize(extensions,
+        compiler_directives={'linetrace': True},
+        language_level = '3',
+        )
 
 data_files = [('', [
         'README.md',
