@@ -1,11 +1,11 @@
 """
-Deriving structural matrices for BFS plate finite element
-Using multiprocessing to accelerate the symbolic integrations
+Mass matrix for BFS plate 2D
 """
 from multiprocessing import Pool
 import numpy as np
 import sympy
 
+num_nodes = 4
 cpu_count = 6
 DOF = 6
 
@@ -26,10 +26,10 @@ def main():
     # bi-linear
     Li = lambda xii, etai: ONE/4.*(1 + xi*xii)*(1 + eta*etai)
     # cubic
-    Hwi = lambda xii, etai: ONE/16.*(xi + xii)**2*(xi*xii - 2)*(eta+etai)**2*(eta*etai - 2)
-    Hwxi = lambda xii, etai: -lex/32.*xii*(xi + xii)**2*(xi*xii - 1)*(eta + etai)**2*(eta*etai - 2)
-    Hwyi = lambda xii, etai: -ley/32.*(xi + xii)**2*(xi*xii - 2)*etai*(eta + etai)**2*(eta*etai - 1)
-    Hwxyi = lambda xii, etai: lex*ley/64.*xii*(xi + xii)**2*(xi*xii - 1)*etai*(eta + etai)**2*(eta*etai - 1)
+    Hw_i = lambda xii, etai: ONE/16.*(xi + xii)**2*(xi*xii - 2)*(eta+etai)**2*(eta*etai - 2)
+    Hwx_i = lambda xii, etai: -lex/32.*xii*(xi + xii)**2*(xi*xii - 1)*(eta + etai)**2*(eta*etai - 2)
+    Hwy_i = lambda xii, etai: -ley/32.*(xi + xii)**2*(xi*xii - 2)*etai*(eta + etai)**2*(eta*etai - 1)
+    Hwxy_i = lambda xii, etai: lex*ley/64.*xii*(xi + xii)**2*(xi*xii - 1)*etai*(eta + etai)**2*(eta*etai - 1)
 
     # node 1 (-1, -1)
     # node 2 (+1, -1)
@@ -37,12 +37,14 @@ def main():
     # node 4 (-1, +1)
 
     Nu = sympy.Matrix([[
+       #u, v, w,     , dw/dx  , dw/dy,  d2w/(dxdy)
         Li(-1, -1), 0, 0, 0, 0, 0,
         Li(+1, -1), 0, 0, 0, 0, 0,
         Li(+1, +1), 0, 0, 0, 0, 0,
         Li(-1, +1), 0, 0, 0, 0, 0,
         ]])
     Nv = sympy.Matrix([[
+       #u, v, w,     , dw/dx  , dw/dy,  d2w/(dxdy)
         0, Li(-1, -1), 0, 0, 0, 0,
         0, Li(+1, -1), 0, 0, 0, 0,
         0, Li(+1, +1), 0, 0, 0, 0,
@@ -50,56 +52,22 @@ def main():
         ]])
     Nw = sympy.Matrix([[
        #u, v, w,     , dw/dx  , dw/dy,  d2w/(dxdy)
-        0, 0, Hwi(-1, -1), Hwxi(-1, -1), Hwyi(-1, -1), Hwxyi(-1, -1),
-        0, 0, Hwi(+1, -1), Hwxi(+1, -1), Hwyi(+1, -1), Hwxyi(+1, -1),
-        0, 0, Hwi(+1, +1), Hwxi(+1, +1), Hwyi(+1, +1), Hwxyi(+1, +1),
-        0, 0, Hwi(-1, +1), Hwxi(-1, +1), Hwyi(-1, +1), Hwxyi(-1, +1),
+        0, 0, Hw_i(-1, -1), Hwx_i(-1, -1), Hwy_i(-1, -1), Hwxy_i(-1, -1),
+        0, 0, Hw_i(+1, -1), Hwx_i(+1, -1), Hwy_i(+1, -1), Hwxy_i(+1, -1),
+        0, 0, Hw_i(+1, +1), Hwx_i(+1, +1), Hwy_i(+1, +1), Hwxy_i(+1, +1),
+        0, 0, Hw_i(-1, +1), Hwx_i(-1, +1), Hwy_i(-1, +1), Hwxy_i(-1, +1),
         ]])
-    A = sympy.Matrix([
-        [A11, A12, A16],
-        [A12, A22, A26],
-        [A16, A26, A66]])
-    B = sympy.Matrix([
-        [B11, B12, B16],
-        [B12, B22, B26],
-        [B16, B26, B66]])
-    D = sympy.Matrix([
-        [D11, D12, D16],
-        [D12, D22, D26],
-        [D16, D26, D66]])
-
-    # membrane
-    Nu_x = (2/lex)*Nu.diff(xi)
-    Nu_y = (2/ley)*Nu.diff(eta)
-    Nv_x = (2/lex)*Nv.diff(xi)
-    Nv_y = (2/ley)*Nv.diff(eta)
-    Bm = sympy.Matrix([
-        Nu_x,
-        Nv_y,
-        Nu_y + Nv_x
-        ])
-
     # bending
     Nphix = -(2/lex)*Nw.diff(xi)
     Nphiy = -(2/ley)*Nw.diff(eta)
-    Nphix_x = (2/lex)*Nphix.diff(xi)
-    Nphix_y = (2/ley)*Nphix.diff(eta)
-    Nphiy_x = (2/lex)*Nphiy.diff(xi)
-    Nphiy_y = (2/ley)*Nphiy.diff(eta)
-    Bb = sympy.Matrix([
-        Nphix_x,
-        Nphiy_y,
-        Nphix_y + Nphiy_x
-        ])
 
-    # mass matrix
-    #TODO note that OFFSET is not supported
-    Me = sympy.zeros(4*DOF, 4*DOF)
+    #TODO
+    # - offset for monolithic
+    # - multi-material laminated shells (sandwhich etc)
+    # - properties per integration point
+    Me = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
     Me[:, :] = (lex*ley)/4.*rho*(h*(Nu.T*Nu + Nv.T*Nv + Nw.T*Nw)
-                          + h**3/12*(Nphix.T*Nphix + Nphiy.T*Nphiy))
-
-    # integrating matrices in natural coordinates
-    #TODO integrate only upper or lower triangle
+          + h**3/12*(Nphix.T*Nphix + Nphiy.T*Nphiy))
 
     print('Integrating Me')
     integrands = []
@@ -126,16 +94,28 @@ def main():
         else:
             raise
 
-    print('printing for code')
+    print('printing code for sparse implementation')
     for ind, val in np.ndenumerate(M):
         if val == 0:
             continue
+        print('                k += 1')
+        print('                Mv[k] +=', M[ind])
+
+    print()
+    print()
+    print()
+    M_SPARSE_SIZE = 0
+    for ind, val in np.ndenumerate(M):
+        if val == 0:
+            continue
+        M_SPARSE_SIZE += 1
         i, j = ind
         si = name_ind(i)
         sj = name_ind(j)
-        print('        M[%d+%s, %d+%s]' % (i%DOF, si, j%DOF, sj), '+=', M[ind])
-
-    #TODO mass matrix
+        print('        k += 1')
+        print('        Mr[k] = %d+%s' % (i%DOF, si))
+        print('        Mc[k] = %d+%s' % (j%DOF, sj))
+    print('M_SPARSE_SIZE', M_SPARSE_SIZE)
 
 if __name__ == '__main__':
     main()
