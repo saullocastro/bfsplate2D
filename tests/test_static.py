@@ -1,18 +1,20 @@
 import sys
-sys.path.append(r'C:\repositories\bfsplate2d')
+sys.path.append('..')
 
 import numpy as np
-from scipy.sparse import csc_matrix
+from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 from composites.laminate import read_stack
 
-from bfsplate2d import BFSPlate2D, update_K
+from bfsplate2d import (BFSPlate2D, update_KC0, DOF, KC0_SPARSE_SIZE, DOUBLE,
+        INT)
+from bfsplate2d.quadrature import get_points_weights
 
-DOF = 6
 def test_static(plot=False):
     # number of nodes
     nx = 7
     ny = 5
+    points, weights = get_points_weights(nint=4)
 
     # geometry
     a = 0.5
@@ -39,7 +41,15 @@ def test_static(plot=False):
     n3s = nids_mesh[1:, 1:].flatten()
     n4s = nids_mesh[:-1, 1:].flatten()
 
-    K = np.zeros((DOF*nx*ny, DOF*nx*ny))
+    num_elements = len(n1s)
+    print('num_elements', num_elements)
+
+    N = DOF*nx*ny
+    Kr = np.zeros(KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    Kc = np.zeros(KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    Kv = np.zeros(KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    init_k_KC0 = 0
+
     plates = []
     for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
         plate = BFSPlate2D()
@@ -47,16 +57,26 @@ def test_static(plot=False):
         plate.n2 = n2
         plate.n3 = n3
         plate.n4 = n4
+        plate.c1 = DOF*nid_pos[n1]
+        plate.c2 = DOF*nid_pos[n2]
+        plate.c3 = DOF*nid_pos[n3]
+        plate.c4 = DOF*nid_pos[n4]
         plate.ABD = lam.ABD
-        update_K(plate, nid_pos, ncoords, K)
+        plate.lex = a/(nx - 1)
+        plate.ley = b/(ny - 1)
+        plate.init_k_KC0 = init_k_KC0
+        update_KC0(plate, points, weights, Kr, Kc, Kv)
+        init_k_KC0 += KC0_SPARSE_SIZE
         plates.append(plate)
+
+    KC0 = coo_matrix((Kv, (Kr, Kc)), shape=(N, N)).tocsc()
 
     # applying boundary conditions
     # simply supported
 
     check = np.isclose(ncoords[:, 0], 0.)
     print('boundary conditions', check.sum())
-    bk = np.zeros(K.shape[0], dtype=bool)
+    bk = np.zeros(KC0.shape[0], dtype=bool)
     bk[0::DOF] = check
     bk[1::DOF] = check
     bk[2::DOF] = check
@@ -65,17 +85,16 @@ def test_static(plot=False):
     bu = ~bk
     print('boundary conditions bu',  bu.sum())
 
-    f = np.zeros(K.shape[0], dtype=float)
+    f = np.zeros(KC0.shape[0], dtype=float)
     check = np.isclose(ncoords[:, 0], a)
     f[2::DOF] = check*1
 
-    Kuu = K[bu, :][:, bu]
+    Kuu = KC0[bu, :][:, bu]
     fu = f[bu]
 
     # solving
-    Kuu = csc_matrix(Kuu) # making Kuu a sparse matrix
     uu = spsolve(Kuu, fu)
-    u = np.zeros(K.shape[0], dtype=float)
+    u = np.zeros(KC0.shape[0], dtype=float)
     u[bu] = uu
 
     if False:

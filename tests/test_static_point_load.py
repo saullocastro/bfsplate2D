@@ -11,10 +11,10 @@ from bfsplate2d import (BFSPlate2D, update_KC0, DOF, KC0_SPARSE_SIZE, DOUBLE,
         INT)
 from bfsplate2d.quadrature import get_points_weights
 
-def test_static_pressure(plot=False):
+def test_static_point_load(plot=False):
     # number of nodes
-    nx = 5
-    ny = 7
+    nx = 29
+    ny = 29
     points, weights = get_points_weights(nint=4)
 
     # geometry
@@ -77,43 +77,23 @@ def test_static_pressure(plot=False):
     # simply supported
     check = isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b)
     bk[2::DOF] = check
-    # point supports (middle)
-    check = isclose(x, a/2) & isclose(y, b/2)
-    bk[0::DOF] = check
-    bk[1::DOF] = check
 
-    bu = ~bk
+    # eliminating all u,v displacements
+    bk[0::DOF] = True
+    bk[1::DOF] = True
 
-    # external force vector applying consistent pressure
-    f = np.zeros(KC0.shape[0], dtype=float)
-    P = 10 # Pa
-    nint = 4
-    points, weights = get_points_weights(nint)
-    for plate in plates:
-        lex = plate.lex
-        ley = plate.ley
-        indices = []
-        c1 = plate.c1
-        c2 = plate.c2
-        c3 = plate.c3
-        c4 = plate.c4
-        cs = [c1, c2, c3, c4]
-        for ci in cs:
-            for i in range(DOF):
-                indices.append(ci + i)
-        fe = np.zeros(4*DOF, dtype=float)
-        for i in range(nint):
-            xi = points[i]
-            weight_xi = weights[i]
-            for j in range(nint):
-                eta = points[j]
-                weight_eta = weights[j]
-                weight = weight_xi*weight_eta
-                plate.update_Nw(xi, eta)
-                Nw = np.asarray(plate.Nw)
-                fe += (lex*ley)/4*weight*Nw*P
-        f[indices] += fe
+    bu = ~bk # same as np.logical_not, defining unknown DOFs
 
+    # external force vector for point load at center
+    f = np.zeros(KC0.shape[0])
+    fmid = 1.
+
+    # force at center node
+    check = np.isclose(x, a/2) & np.isclose(y, b/2)
+    f[2::DOF][check] = fmid
+    assert f.sum() == fmid
+
+    # sub-matrices corresponding to unknown DOFs
     Kuu = KC0[bu, :][:, bu]
     fu = f[bu]
 
@@ -134,7 +114,6 @@ def test_static_pressure(plot=False):
         plt.contourf(xmesh, ymesh, w, levels=levels)
         plt.colorbar()
         plt.show()
-    assert np.isclose(w.max(), 3.9407e-3, rtol=1e-3)
 
 if __name__ == '__main__':
-    test_static_pressure(plot=True)
+    test_static_point_load(plot=True)

@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 import numpy as np
 
 from bfsplate2d.quadrature import get_points_weights

@@ -2,18 +2,24 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.sparse import csc_matrix
+from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import eigsh
 from scipy.sparse.linalg import eigsh, spsolve
 import numpy as np
 from composites.laminate import read_stack
 
-from bfsplate2d import BFSPlate2D, update_K, update_Kg, DOF
+from bfsplate2d import (BFSPlate2D, update_KC0, update_KG, DOF, KC0_SPARSE_SIZE,
+        KG_SPARSE_SIZE, DOUBLE, INT)
 from bfsplate2d.quadrature import get_points_weights
+
 
 def test_linear_buckling(plot_static=False, plot_lb=False):
     # number of nodes
     nx = 7 # along x
     ny = 5 # along y
+
+    # getting integration points
+    points, weights = get_points_weights(nint=4)
 
     # geometry
     a = 7 # along x
@@ -61,24 +67,43 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
     n3s = nids_mesh[1:, 1:].flatten()
     n4s = nids_mesh[:-1, 1:].flatten()
 
-    Kg = np.zeros((DOF*nx*ny, DOF*nx*ny))
-    K = np.zeros((DOF*nx*ny, DOF*nx*ny))
+    num_elements = len(n1s)
+    print('num_elements', num_elements)
+
+    N = DOF*nx*ny
+    Kr = np.zeros(KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    Kc = np.zeros(KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    Kv = np.zeros(KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    KGr = np.zeros(KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGc = np.zeros(KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGv = np.zeros(KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    init_k_KC0 = 0
+    init_k_KG = 0
+
     plates = []
     for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
         plate = BFSPlate2D()
-        plate.n1 = n1
-        plate.n2 = n2
-        plate.n3 = n3
-        plate.n4 = n4
+        plate.c1 = DOF*nid_pos[n1]
+        plate.c2 = DOF*nid_pos[n2]
+        plate.c3 = DOF*nid_pos[n3]
+        plate.c4 = DOF*nid_pos[n4]
         plate.ABD = lam.ABD
-        update_K(plate, nid_pos, ncoords, K)
+        plate.lex = a/(nx - 1)
+        plate.ley = b/(ny - 1)
+        plate.init_k_KC0 = init_k_KC0
+        plate.init_k_KG = init_k_KG
+        update_KC0(plate, points, weights, Kr, Kc, Kv)
+        init_k_KC0 += KC0_SPARSE_SIZE
+        init_k_KG += KG_SPARSE_SIZE
         plates.append(plate)
+
+    KC0 = coo_matrix((Kv, (Kr, Kc)), shape=(N, N)).tocsc()
 
     # applying boundary conditions
     # simply supported
 
     # locating nodes
-    bk = np.zeros(K.shape[0], dtype=bool) # constrained DOFs, can be used to prescribe displacements
+    bk = np.zeros(KC0.shape[0], dtype=bool) # constrained DOFs, can be used to prescribe displacements
 
     x = ncoords[:, 0]
     y = ncoords[:, 1]
@@ -96,9 +121,8 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
     # unconstrained nodes
     bu = ~bk # logical_not
 
-
     # defining external force vector
-    fext = np.zeros(K.shape[0], dtype=float)
+    fext = np.zeros(KC0.shape[0], dtype=float)
 
     # applying unitary load along u at x=a
     # nodes at vertices get 1/2 the force
@@ -110,13 +134,12 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
             |(np.isclose(x, a) & np.isclose(y, b)))
     fext[0::DOF][check] = ftotal/(ny - 1)/2
 
-    Kuu = K[bu, :][:, bu]
+    Kuu = KC0[bu, :][:, bu]
     fextu = fext[bu]
 
     # static solver
-    Kuu = csc_matrix(Kuu) # making Kuu a sparse matrix
     uu = spsolve(Kuu, fextu)
-    u = np.zeros(K.shape[0], dtype=float)
+    u = np.zeros(KC0.shape[0], dtype=float)
     u[bu] = uu
 
     print('u extremes', u.min(), u.max())
@@ -133,21 +156,19 @@ def test_linear_buckling(plot_static=False, plot_lb=False):
 
     # eigenvalue solver
 
-    # getting integration points
-    points, weights = get_points_weights(nint=4)
     for plate in plates:
-        update_Kg(u, plate, nid_pos, points, weights, Kg)
-    Kguu = Kg[bu, :][:, bu]
-    Kguu = csc_matrix(Kguu) # making Kguu a sparse matrix
+        update_KG(u, plate, points, weights, KGr, KGc, KGv)
+    KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
+    KGuu = KG[bu, :][:, bu]
 
     # solving modified generalized eigenvalue problem
-    # Original: (K + lambda*KG)*v = 0
-    # Modified: (-1/lambda)*K*v = KG*v  #NOTE here we find (-1/lambda)
+    # Original: (KC0 + lambda*KG)*v = 0
+    # Modified: (-1/lambda)*KC0*v = KG*v  #NOTE here we find (-1/lambda)
     num_eigenvalues = 5
-    eigvals, eigvecsu = eigsh(A=Kguu, k=num_eigenvalues, which='SM', M=Kuu,
+    eigvals, eigvecsu = eigsh(A=KGuu, k=num_eigenvalues, which='SM', M=Kuu,
             tol=1e-6, sigma=1., mode='cayley')
     eigvals = -1./eigvals
-    eigvecs = np.zeros((K.shape[0], num_eigenvalues), dtype=float)
+    eigvecs = np.zeros((KC0.shape[0], num_eigenvalues), dtype=float)
     eigvecs[bu, :] = eigvecsu
 
     if plot_lb:
