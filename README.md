@@ -3,7 +3,7 @@ nonlinear analyses.
 
 Travis-CI status:
 
-[![Build Status](https://travis-ci.org/saullocastro/bfsplate2d.svg?branch=master)](https://travis-ci.org/saullocastro/bfsplate2d)
+[![Build Status](https://travis-ci.com/saullocastro/bfsplate2d.svg?token=42zpXqXADpxR3nr2TD7y&branch=master)](https://travis-ci.com/saullocastro/bfsplate2d)
 
 Github Actions status:
 
